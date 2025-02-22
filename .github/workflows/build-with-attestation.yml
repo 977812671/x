@@ -7,9 +7,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write  # 关键权限：允许生成 OIDC Token
-      contents: read    # 读取仓库内容
-
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,8 +23,14 @@ jobs:
           name: my-artifact
           path: dist/output.txt
 
-      - name: Generate SLSA Provenance
-        uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
-        with:
-          artifacts: "dist/output.txt"  # 指定要生成证明的文件
-          upload-assets: true           # 将证明上传到 GitHub
+  # 新增独立作业，调用可重用工作流生成 SLSA Provenance
+  generate-provenance:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # 必须权限
+      contents: read
+    needs: build       # 依赖 build 作业
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
+    with:
+      artifacts: "dist/output.txt"  # 从 build 作业生成的产物路径
+      upload-assets: true
