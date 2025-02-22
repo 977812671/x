@@ -1,0 +1,32 @@
+name: Build with Attestation
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # 关键权限：允许生成 OIDC Token
+      contents: read    # 读取仓库内容
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build project
+        run: |
+          mkdir -p dist
+          echo "Hello World" > dist/output.txt
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-artifact
+          path: dist/output.txt
+
+      - name: Generate SLSA Provenance
+        uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
+        with:
+          artifacts: "dist/output.txt"  # 指定要生成证明的文件
+          upload-assets: true           # 将证明上传到 GitHub
