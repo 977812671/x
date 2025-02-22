@@ -4,6 +4,7 @@ on:
     branches: [main]
 
 jobs:
+  # 构建作业
   build:
     runs-on: ubuntu-latest
     permissions:
@@ -23,14 +24,14 @@ jobs:
           name: my-artifact
           path: dist/output.txt
 
-  # 新增独立作业，调用可重用工作流生成 SLSA Provenance
+  # 调用可重用工作流生成 SLSA Provenance
   generate-provenance:
-    runs-on: ubuntu-latest
+    # 关键：直接引用外部工作流，无需定义 steps/runs-on
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
     permissions:
       id-token: write  # 必须权限
       contents: read
     needs: build       # 依赖 build 作业
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v1.9.0
     with:
       artifacts: "dist/output.txt"  # 从 build 作业生成的产物路径
       upload-assets: true
